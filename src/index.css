@@ -19,3 +19,12 @@ code {
 .mg-r-15 {
   margin-right: 15px;
 }
+
+.mg-r-10 {
+  margin-right: 10px;
+}
+
+.custom-icon-action {
+  color: blue;
+  cursor: pointer;
+}

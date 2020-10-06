@@ -23,21 +23,27 @@ export default class UserData extends Component {
     });
   }
 
-  onClickHandler(id) {
+  onClickEditUserHandler(id) {
     let user = this.props.users.find(u => u.id === id);
-    this.props.changeCurrentUser(user);
+    this.props.editUser(user);
+  }
+
+  onClickDeleteUserHandler(id) {
+    let user = this.props.users.find(u => u.id === id);
+    this.props.deleteUser(user);
   }
 
   renderButton(id) {
-    if (this.props.currentUser) {return null;}
+    let { currentUser, isAddUser } = this.props
+    if (isAddUser || currentUser.id !== null && !currentUser.isCanceled && !currentUser.isUpdated) {return null;}
 
     if (this.state.id === id && this.state.isHover) {
       return <div>
-        <span onClick={() => this.onClickHandler(id)}>
-          <i className='fa fa-edit' style={{color: 'blue', cursor: 'pointer', marginRight: 10}}></i>
+        <span onClick={() => this.onClickEditUserHandler(id)}>
+          <i className='fa fa-edit mg-r-10 custom-icon-action'></i>
         </span>
-        <span>
-          <i className='fa fa-trash' style={{color: 'blue', cursor: 'pointer'}}></i>
+        <span onClick={() => this.onClickDeleteUserHandler(id)}>
+          <i className='fa fa-trash custom-icon-action'></i>
         </span>
       </div>
     }
@@ -82,7 +88,7 @@ export default class UserData extends Component {
         </thead>
         <tbody>
           {this.renderUserData()}
-          {this.renderAddUser()}
+          {this.props.isAddUser ? null : this.renderAddUser()}
         </tbody>
       </table>
     );
@@ -91,6 +97,7 @@ export default class UserData extends Component {
 
 UserData.propTypes = {
   users: PropTypes.array,
-  changeCurrentUser: PropTypes.func,
-  addUserHandler: PropTypes.func
+  editUser: PropTypes.func,
+  deleteUser: PropTypes.func,
+  isAddUser: PropTypes.bool
 };

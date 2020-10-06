@@ -1,14 +1,18 @@
 import React, { Component } from 'react';
 import UserData from './user_data';
-import UserForm from './user_form'
-import CurrentTime from '../shared/current_time'
+import UserForm from './user_form';
+import CurrentTime from '../shared/current_time';
+import CountUpTime from '../shared/count_up_time';
+import { Wave } from 'react-animated-text';
 
 export default class Users extends Component {
   constructor() {
     super();
     this.state = {
       users: JSON.parse(localStorage.getItem('users')) || [],
-      currentUser: null,
+      currentUser: {
+        id: null, name: '', email: ''
+      },
       isAddUser: false
     }
   }
@@ -17,39 +21,60 @@ export default class Users extends Component {
     localStorage.setItem('users', JSON.stringify(this.state.users));
   }
 
-  onChangeAttribute(event, attribute) {
-    let newState = this.state
-    newState.currentUser[attribute] = event.target.value
-    this.setState(newState);
+  editUser(user) {
+    this.setState({
+      currentUser: Object.assign(user, {isCanceled: false, isUpdated: false}),
+      isAddUser: false
+    })
   }
 
-  changeCurrentUser(user) {
-    let newState = this.state
-    newState.currentUser = user
-    this.setState(newState)
+  deleteUser(currentUser) {
+    let filterUsers = this.state.users.filter(user => user !== currentUser);
+    this.setState({users: filterUsers})
   }
 
   onSubmitForm(currentUser) {
-    let newState = this.state
-    let currentIndex = newState.users.findIndex(user => user.id === currentUser.id)
+    let newUsers= this.state.users;
+    let currentIndex = newUsers.findIndex(user => user.id === currentUser.id);
 
     if (currentIndex >= 0) {
-      newState.users[currentIndex] = currentUser
-      this.setState(newState)
+      newUsers[currentIndex] = currentUser
+      this.setState({
+        users: newUsers,
+        currentUser: currentUser,
+        isAddUser: false
+      })
+    } else if (currentUser.isCanceled || currentUser.id === null) {
+      this.setState({
+        isAddUser: false
+      })
     } else {
       this.setState({
-        users: [...this.state.users, currentUser]
+        users: [...this.state.users, currentUser],
+        currentUser: currentUser,
+        isAddUser: false
       })
     }
   }
 
   addUserHandler() {
     this.setState({
-      isAddUser: true
+      isAddUser: true,
+      currentUser: {
+        id: null, name: '', email: ''
+      }
     })
   }
 
   renderTableListUser() {
+    let { currentUser, isAddUser } = this.state;
+    let eleUserForm;
+    if (isAddUser || (currentUser.id !== null && !currentUser.isCanceled && !currentUser.isUpdated)) {
+      eleUserForm = <UserForm onSubmitForm={this.onSubmitForm.bind(this)}
+        currentUser={this.state.currentUser}
+        isAddUser={this.state.isAddUser}
+      />
+    }
     return (
       <div>
         <table className='table table-bordered'>
@@ -57,7 +82,7 @@ export default class Users extends Component {
           <tr>
             <td className='text-left'><h3>{'Exercise 2'}</h3></td>
             <td className='text-right'>
-              <CurrentTime />
+              <CountUpTime />
             </td>
           </tr>
         </thead>
@@ -66,17 +91,15 @@ export default class Users extends Component {
             <td width="50%">
               <UserData
                 users={this.state.users}
-                changeCurrentUser={this.changeCurrentUser.bind(this)}
+                editUser={this.editUser.bind(this)}
+                deleteUser={this.deleteUser.bind(this)}
                 currentUser={this.state.currentUser}
                 addUserHandler={this.addUserHandler.bind(this)}
+                isAddUser={this.state.isAddUser}
               />
             </td>
             <td>
-              <UserForm onChangeAttribute={this.onChangeAttribute.bind(this)}
-                onSubmitForm={this.onSubmitForm.bind(this)}
-                currentUser={this.state.currentUser}
-                isAddUser={this.state.isAddUser}
-              />
+              {eleUserForm}
             </td>
           </tr>
         </tbody>
@@ -89,6 +112,10 @@ export default class Users extends Component {
     return (
       <div>
         {this.renderTableListUser()}
+        <div className='text-center'>
+          <Wave text="Khó vãi (╥_╥)" effect="stretch" effectChange={2.2} />
+          <CurrentTime />
+        </div>
       </div>
     );
   }
