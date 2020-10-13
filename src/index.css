@@ -28,3 +28,15 @@ code {
   color: blue;
   cursor: pointer;
 }
+
+.error-messages {
+  color: red;
+}
+
+.pd-top-15 {
+  padding-top: 15px;
+}
+
+.pd-left-15 {
+  padding-left: 15px !important;
+}

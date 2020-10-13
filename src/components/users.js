@@ -10,10 +10,11 @@ export default class Users extends Component {
     super();
     this.state = {
       users: JSON.parse(localStorage.getItem('users')) || [],
-      currentUser: {
-        id: null, name: '', email: ''
-      },
-      isAddUser: false
+      focusUserId: null,
+      isAdded: false,
+      isEdited: false,
+      isSaved: false,
+      isCanceled: false
     }
   }
 
@@ -21,97 +22,107 @@ export default class Users extends Component {
     localStorage.setItem('users', JSON.stringify(this.state.users));
   }
 
-  editUser(user) {
+  addUserHandler() {
     this.setState({
-      currentUser: Object.assign(user, {isCanceled: false, isUpdated: false}),
-      isAddUser: false
+      focusUserId: null,
+      isAdded: true,
+      isEdited: false,
+      isCanceled: false,
+      isSaved: false
     })
   }
 
-  deleteUser(currentUser) {
-    let filterUsers = this.state.users.filter(user => user !== currentUser);
+  editUserHandler(id) {
+    this.setState({
+      focusUserId: id,
+      isAdded: false,
+      isEdited: true,
+      isCanceled: false,
+      isSaved: false
+    })
+  }
+
+  deleteUserHandler(id) {
+    let filterUsers = this.state.users.filter(user => user.id !== id);
     this.setState({users: filterUsers})
   }
 
-  onSubmitForm(currentUser) {
-    let newUsers= this.state.users;
-    let currentIndex = newUsers.findIndex(user => user.id === currentUser.id);
+  onSubmitForm(focusUser, action) {
+    let newState = this.state;
+    let newUsers = newState.users.map(u => u.id === focusUser.id ? focusUser : u);
 
-    if (currentIndex >= 0) {
-      newUsers[currentIndex] = currentUser
+    if (action === 'cancel') {
+      newState = Object.assign(newState, {isCanceled: true, isAdded: false, isEdited: false, isSaved: false})
+    } else {
+      newState = Object.assign(newState, {isSaved: true, isCanceled: false, isEdited: false})
+    }
+
+    if (this.state.isCanceled) {
+      this.setState({users: this.state.users, isAdded: false})
+    } else if (this.state.isAdded) {
       this.setState({
-        users: newUsers,
-        currentUser: currentUser,
-        isAddUser: false
-      })
-    } else if (currentUser.isCanceled || currentUser.id === null) {
-      this.setState({
-        isAddUser: false
+        users: [...this.state.users, focusUser],
+        isAdded: false
       })
     } else {
-      this.setState({
-        users: [...this.state.users, currentUser],
-        currentUser: currentUser,
-        isAddUser: false
-      })
+      this.setState({users: newUsers, isAdded: false})
     }
   }
 
-  addUserHandler() {
-    this.setState({
-      isAddUser: true,
-      currentUser: {
-        id: null, name: '', email: ''
-      }
-    })
+  renderUserForm() {
+    let { isAdded, isCanceled, isSaved, focusUserId, users } = this.state;
+    if (isCanceled || isSaved || (!isAdded && focusUserId === null)) {return null;}
+
+    return <UserForm
+      users={users}
+      focusUserId={focusUserId}
+      isAdded={isAdded}
+      isSaved={isSaved}
+      isCanceled={isCanceled}
+      onSubmitForm={this.onSubmitForm.bind(this)}
+    />
   }
 
-  renderTableListUser() {
-    let { currentUser, isAddUser } = this.state;
-    let eleUserForm;
-    if (isAddUser || (currentUser.id !== null && !currentUser.isCanceled && !currentUser.isUpdated)) {
-      eleUserForm = <UserForm onSubmitForm={this.onSubmitForm.bind(this)}
-        currentUser={this.state.currentUser}
-        isAddUser={this.state.isAddUser}
-      />
-    }
-    return (
-      <div>
-        <table className='table table-bordered'>
-        <thead>
-          <tr>
-            <td className='text-left'><h3>{'Exercise 2'}</h3></td>
-            <td className='text-right'>
-              <CountUpTime />
-            </td>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td width="50%">
-              <UserData
-                users={this.state.users}
-                editUser={this.editUser.bind(this)}
-                deleteUser={this.deleteUser.bind(this)}
-                currentUser={this.state.currentUser}
-                addUserHandler={this.addUserHandler.bind(this)}
-                isAddUser={this.state.isAddUser}
-              />
-            </td>
-            <td>
-              {eleUserForm}
-            </td>
-          </tr>
-        </tbody>
-        </table>
-      </div>
-    )
+  renderUserData() {
+    let { isAdded, isEdited, isCanceled, focusUserId, users } = this.state;
+
+    return <UserData
+      users={users}
+      focusUserId={focusUserId}
+      isAdded={isAdded}
+      isEdited={isEdited}
+      isCanceled={isCanceled}
+      addUserHandler={this.addUserHandler.bind(this)}
+      editUserHandler={this.editUserHandler.bind(this)}
+      deleteUserHandler={this.deleteUserHandler.bind(this)}
+    />
   }
 
   render() {
     return (
       <div>
-        {this.renderTableListUser()}
+        <div>
+          <table className='table table-bordered'>
+            <thead>
+              <tr>
+                <td className='text-left'><h3>{'Exercise 2'}</h3></td>
+                <td className='text-right'>
+                  <CountUpTime />
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td width='50%'>
+                  {this.renderUserData()}
+                </td>
+                <td>
+                  {this.renderUserForm()}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div className='text-center'>
           <Wave text="Khó vãi (╥_╥)" effect="stretch" effectChange={2.2} />
           <CurrentTime />

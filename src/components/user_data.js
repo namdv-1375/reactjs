@@ -1,72 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Button } from 'react-bootstrap';
+import Paginate from '../shared/paginate';
 
 export default class UserData extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      id: null,
-      isHover: false
-    }
-  }
+  renderButtonAddUser() {
+    if (this.props.isAdded) {return null;}
 
-  onMouseEnterHandler(id) {
-    this.setState({
-      id: id, isHover: true
-    });
-  }
-
-  onMouseLeaveHandler(id) {
-    this.setState({
-      id: id, isHover: false
-    });
-  }
-
-  onClickEditUserHandler(id) {
-    let user = this.props.users.find(u => u.id === id);
-    this.props.editUser(user);
-  }
-
-  onClickDeleteUserHandler(id) {
-    let user = this.props.users.find(u => u.id === id);
-    this.props.deleteUser(user);
-  }
-
-  renderButton(id) {
-    let { currentUser, isAddUser } = this.props
-    if (isAddUser || currentUser.id !== null && !currentUser.isCanceled && !currentUser.isUpdated) {return null;}
-
-    if (this.state.id === id && this.state.isHover) {
-      return <div>
-        <span onClick={() => this.onClickEditUserHandler(id)}>
-          <i className='fa fa-edit mg-r-10 custom-icon-action'></i>
-        </span>
-        <span onClick={() => this.onClickDeleteUserHandler(id)}>
-          <i className='fa fa-trash custom-icon-action'></i>
-        </span>
-      </div>
-    }
-  }
-
-  renderUserData() {
-    const {users} = this.props;
-    const rows = users.map((user, index) => {
-      return (
-        <tr key={`user-${index}`}
-          onMouseEnter={() => this.onMouseEnterHandler(user.id)}
-          onMouseLeave={() => this.onMouseLeaveHandler(user.id)}>
-          <td className='text-left' width='20%'>{user.name}</td>
-          <td className='text-left' width='20%%'>{user.email}</td>
-          <td className='text-center' width='10%'>{this.renderButton(user.id)}</td>
-        </tr>
-      );
-    });
-
-    return rows;
-  }
-
-  renderAddUser() {
     return (
       <tr>
         <td colSpan='3' className='text-center' width='100%'>
@@ -77,6 +17,11 @@ export default class UserData extends Component {
   }
 
   render() {
+    let {
+      users, isAdded, isEdited, isCanceled,
+      editUserHandler, deleteUserHandler
+    } = this.props;
+
     return (
       <table className='table table-bordered'>
         <thead>
@@ -87,8 +32,13 @@ export default class UserData extends Component {
           </tr>
         </thead>
         <tbody>
-          {this.renderUserData()}
-          {this.props.isAddUser ? null : this.renderAddUser()}
+          <Paginate data={users}
+            currentUser={this.state}
+            isAdded={isAdded} isEdited={isEdited} isCanceled={isCanceled}
+            editUserHandler={editUserHandler.bind(this)}
+            deleteUserHandler={deleteUserHandler.bind(this)}
+          />
+          {this.renderButtonAddUser()}
         </tbody>
       </table>
     );
@@ -97,7 +47,8 @@ export default class UserData extends Component {
 
 UserData.propTypes = {
   users: PropTypes.array,
-  editUser: PropTypes.func,
-  deleteUser: PropTypes.func,
-  isAddUser: PropTypes.bool
+  addUserHandler: PropTypes.func,
+  editUserHandler: PropTypes.func,
+  deleteUserHandler: PropTypes.func,
+  isAdded: PropTypes.bool
 };
